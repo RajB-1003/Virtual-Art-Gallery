@@ -1,0 +1,112 @@
+VIRTUAL ART GALLERY - BACKEND DOCUMENTATION
+===========================================
+
+1. OVERVIEW
+-----------
+The backend of the Virtual Art Gallery is a high-performance RESTful API built using FastAPI (Python). It serves as the data layer for the application, managing Artists, Artworks, and Galleries using an SQLite database.
+
+Tech Stack:
+- Framework: FastAPI
+- Database: SQLite
+- ORM: SQLAlchemy
+- Data Validation: Pydantic
+
+2. DIRECTORY STRUCTURE
+----------------------
+backend/
+├── database.py      # Database connection and session setup
+├── models.py        # SQLAlchemy database models (Table definitions)
+├── schemas.py       # Pydantic models (Request/Response validation)
+├── crud.py          # Database access layer (Create, Read, Update, Delete logic)
+├── main.py          # Application entry point and configuration
+├── seed.py          # Script to populate database with sample data
+└── routers/         # API Route handlers
+    ├── artists.py   # /artists endpoints
+    ├── artworks.py  # /artworks endpoints
+    └── galleries.py # /galleries endpoints
+
+3. DATA MODELS (RELATIONSHIPS)
+------------------------------
+The database consists of three main tables with the following relationships:
+
+a) Artists (Table: 'artists')
+   - Primary attributes: Name, Email, Country, Bio
+   - Relationships:
+     * One-to-Many with Artworks (One artist creates many artworks)
+     * One-to-Many with Galleries (One artist owns many galleries)
+
+b) Galleries (Table: 'galleries')
+   - Primary attributes: Name, Theme, Description
+   - Relationships:
+     * Many-to-One with Artists (Owned by an artist)
+     * One-to-Many with Artworks (Displays many artworks)
+
+c) Artworks (Table: 'artworks')
+   - Primary attributes: Title, Category, Price, Image URL, Tags
+   - Relationships:
+     * Many-to-One with Artists (Created by an artist)
+     * Many-to-One with Galleries (Located in a gallery)
+
+4. API ENDPOINTS
+----------------
+
+A. Artists [/artists]
+   - GET /artists/ : List all artists (supports filtering by country)
+   - POST /artists/ : Create a new artist
+   - GET /artists/{id} : Get details of a specific artist
+   - PUT /artists/{id} : Update an artist
+   - DELETE /artists/{id} : Delete an artist
+   - GET /artists/search/{name} : Search artists by name
+   - GET /artists/stats/ : Get total count of artists
+
+B. Artworks [/artworks]
+   - GET /artworks/ : List all artworks (supports filtering by category, price, year, tags)
+   - POST /artworks/ : Create a new artwork
+   - GET /artworks/{id} : Get details of a specific artwork
+   - PUT /artworks/{id} : Update an artwork
+   - DELETE /artworks/{id} : Delete an artwork
+   - GET /artworks/search/{keyword} : Search artworks by title or tags
+   - GET /artworks/stats/ : Get total count of artworks
+   - GET /artworks/artist/{artist_id} : Get all artworks by a specific artist
+
+C. Galleries [/galleries]
+   - GET /galleries/ : List all galleries (supports filtering by theme)
+   - POST /galleries/ : Create a new gallery
+   - GET /galleries/{id} : Get specific gallery details
+   - POST /galleries/{id}/artworks : Add an artwork to a gallery
+   - DELETE /galleries/{id}/artworks/{artwork_id} : Remove an artwork from a gallery
+
+5. KEY FILES EXPLANATION
+------------------------
+
+- database.py:
+  Initializes the SQLite engine using `sqlalchemy.create_engine`.
+  Provides `get_db()` dependency for managing database sessions per request.
+
+- crud.py:
+  Contains standalone functions for every database interaction. This separates SQL logic from the API routes.
+  Example: `get_artists`, `create_artist`, `search_artworks`.
+
+- schemas.py:
+  Defines Pydantic models.
+  * Base models (e.g., `ArtistBase`) contain common fields.
+  * Create models (e.g., `ArtistCreate`) are used for POST/PUT requests.
+  * Response models (e.g., `Artist`) include internal fields like `id` and `created_at`.
+  * Config `from_attributes = True` allows Pydantic to read data directly from SQLAlchemy objects.
+
+- main.py:
+  Initializes the `FastAPI` app.
+  Configures CORS (Cross-Origin Resource Sharing) to allow the frontend to communicate with the API.
+  Includes all routers (`app.include_router(...)`).
+  Creates database tables automatically on startup using `models.Base.metadata.create_all(bind=engine)`.
+
+6. HOW TO RUN
+-------------
+1. Navigate to the project root folder.
+2. Activate your virtual environment (if using one).
+3. Run the server using Uvicorn:
+   
+   python -m uvicorn backend.main:app --reload
+
+4. Access the automatic API documentation at:
+   http://localhost:8000/docs

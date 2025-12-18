@@ -1,0 +1,180 @@
+titile : Virtual Art Gallery
+
+Project Description : 
+
+The Virtual Art Gallery is a full-stack web application that provides an immersive and highly interactive platform for users to explore, curate, and manage digital art collections online. 
+Artists can now manage portfolios with real-time statistics, categorize their artworks using metadata and tags, and users can create multiple personalized galleries. This application 
+will demonstrate CRUD operations, search/filter/sort functionality, and proper error handling using SQLite, FastAPI, and Next.js.
+
+Database Design (SQLite)
+Table 1: Artists 
+CREATE TABLE artists (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    country VARCHAR(50),
+    bio TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+Table 2: Galleries (Add artist_id for ownership)
+CREATE TABLE galleries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(150) NOT NULL,
+    description TEXT,
+    theme VARCHAR(50),
+    artist_id INTEGER, -- Gallery created by an artist (optional)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (artist_id) REFERENCES artists(id) ON DELETE SET NULL
+);
+Table 3: Artworks (Add gallery_id reference)
+CREATE TABLE artworks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    artist_id INTEGER NOT NULL,
+    category VARCHAR(50) CHECK(category IN ('Painting', 'Digital', 'Sculpture', 'Photography', 'Mixed Media')),
+    price DECIMAL(10, 2),
+    tags TEXT,
+    image_url VARCHAR(500),
+    created_year INTEGER,
+    gallery_id INTEGER, -- Which gallery this artwork is displayed in
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (artist_id) REFERENCES artists(id) ON DELETE CASCADE,
+    FOREIGN KEY (gallery_id) REFERENCES galleries(id) ON DELETE SET NULL
+);
+
+________________________________________
+Backend API Endpoints (FastAPI)
+
+1. Artist Endpoints
+text
+GET    /artists/                   - List all artists (with optional query params)
+GET    /artists/{id}              - Get specific artist details
+POST   /artists/                  - Create new artist
+PUT    /artists/{id}              - Update artist
+DELETE /artists/{id}              - Delete artist
+GET    /artists/search/{name}     - Search artists by name (path param)
+GET    /artists/filter?country=   - Filter artists by country (query param)
+GET    /artists/stats/            - Get artist statistics (count, by country, etc.)
+2. Artwork Endpoints
+GET    /artworks/                  - List all artworks (with query params for filtering)
+GET    /artworks/{id}             - Get specific artwork
+POST   /artworks/                 - Create new artwork
+PUT    /artworks/{id}             - Update artwork
+DELETE /artworks/{id}             - Delete artwork
+GET    /artworks/search/{keyword} - Search by title/tags (path param)
+GET    /artworks/filter?          - Filter with multiple criteria (query params)
+GET    /artworks/artist/{artist_id} - Get all artworks by specific artist
+GET    /artworks/stats/           - Get artwork statistics (by category, year, etc.)
+3. Gallery Endpoints
+GET    /galleries/                 - List all galleries
+GET    /galleries/{id}            - Get specific gallery with artworks
+POST   /galleries/                - Create new gallery
+PUT    /galleries/{id}            - Update gallery
+DELETE /galleries/{id}            - Delete gallery
+GET    /galleries/search/{name}   - Search galleries by name
+GET    /galleries/filter?theme=   - Filter galleries by theme
+POST   /galleries/{id}/artworks   - Add artwork to gallery
+DELETE /galleries/{id}/artworks/{artwork_id} - Remove artwork from gallery
+Query Parameters for Filtering/Sorting (Example for artworks):
+GET /api/artworks/?category=Painting&min_price=100&max_price=1000&sort_by=price&order=desc
+GET /api/artworks/?tags=abstract,modern&year=2023
+________________________________________
+Frontend Pages (Next.js)
+Page 1: Home Page (/)
+Purpose: Landing page with overview
+•	Navbar with navigation links
+•	Hero section with project description
+•	Statistics cards (Total Artists, Total Artworks, Total Galleries)
+•	Quick links to browse sections
+•	Footer with project info
+Page 2: Artists Management (/artists)
+Purpose: CRUD operations for artists
+•	List View: Table/grid showing all artists with columns: Name, Country, Email, #Artworks, Actions
+•	Search Bar: Search artists by name
+•	Filter Section: Dropdown to filter by country
+•	Add Button: Opens form to add new artist
+•	Action Buttons: Edit (opens edit form), Delete (with confirmation)
+•	Error Handling: Display messages for empty state, errors
+Page 3: Artist Detail (/artists/[id])
+Purpose: View artist details and their artworks
+•	Artist information card (Name, Bio, Country, Email)
+•	List of artworks by this artist
+•	Statistics about their artworks (count by category)
+•	Link to add new artwork for this artist
+•	404 page if artist doesn't exist
+Page 4: Artworks Management (/artworks)
+Purpose: CRUD operations for artworks
+•	Grid/List View: Display artworks with image, title, artist, category, price
+•	Advanced Filters:
+o	Category dropdown
+o	Price range slider
+o	Year range
+o	Tags input
+•	Sort Options: Sort by price (low-high, high-low), date, title
+•	Search: Search by title or tags
+•	Add/Edit Forms: Modal/form page for adding/editing artworks
+•	Error Boundaries: Handle API errors gracefully
+Page 5: Artwork Detail (/artworks/[id])
+Purpose: View single artwork in detail
+•	Large image display
+•	Complete artwork information
+•	Artist details with link to artist page
+•	Option to add this artwork to a gallery
+•	Related artworks section
+Page 6: Galleries Management (/galleries)
+Purpose: CRUD operations for galleries
+•	Card View: Display galleries as cards with name, theme, description
+•	Create Gallery Form: Simple form with name, description, theme
+•	Gallery Detail View: Shows artworks in this gallery with option to remove
+•	Add Artwork to Gallery: Modal to select artwork from list to add to gallery
+•	Search & Filter: By gallery name or theme
+Page 7: Dashboard (/dashboard)
+Purpose: Show statistics and insights
+•	Charts/graphs using simple CSS or basic chart library
+•	Total counts (artists, artworks, galleries)
+•	Artworks by category pie chart
+•	Artists by country distribution
+•	Recent additions list
+Page 8: Error Pages
+•	404 Page: Custom not found page
+•	500 Page: Server error page
+•	API Error Handling: Display user-friendly messages when API calls fail
+________________________________________
+
+Implementation Guidelines
+Day 1: Backend Implementation
+1.	Setup FastAPI project structure
+2.	Create SQLite database with tables
+3.	Add search, filter, sort functionality using both path and query parameters
+4.	Implement proper error handling (HTTP exceptions)
+5.	Add CORS middleware for frontend communication
+6.	Test all endpoints using FastAPI's automatic docs (/docs)
+Day 2: Frontend Implementation
+1.	Setup Next.js project with App Router
+2.	Create all pages with basic structure
+3.	Implement all components (Cards, Forms, etc.)
+4.	Implement API service functions for calling backend
+5.	Add basic styling with CSS/Tailwind
+Day 3: Integration & Polish
+1.	Connect frontend to backend APIs
+2.	Implement complete CRUD flows
+3.	Add search, filter, sort functionality in frontend
+4.	Implement comprehensive error handling
+5.	Add loading states and user feedback
+6.	Test complete application flow
+7.	Add final styling and responsiveness
+________________________________________
+Relationship Explanation:
+1. Artist ↔ Artworks
+•	One-to-Many: One artist can create many artworks
+•	Foreign key: artworks.artist_id references artists.id
+2. Artist ↔ Galleries (Optional)
+•	One-to-Many: One artist can create many galleries (if you want galleries to have owners)
+•	Foreign key: galleries.artist_id references artists.id
+3. Gallery ↔ Artworks
+•	One-to-Many: One gallery can display many artworks
+•	Foreign key: artworks.gallery_id references galleries.id
+•	An artwork can only be in ONE gallery at a time (simpler for beginners)
+________________________________________
+
